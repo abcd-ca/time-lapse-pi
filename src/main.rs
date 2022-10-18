@@ -6,6 +6,7 @@ use std::error::Error;
 use std::time::Duration;
 use tokio::{task, time}; // 1.3.0
 
+// TODO https://www.raspberrypi.com/documentation/accessories/camera.html#libcamera-jpeg
 async fn capture_image(n: u32) -> Result<(), Box<dyn Error  + Send + Sync>>  {
     // command exists on legacy versions of raspian only
     let output = Command::new("raspistill")
