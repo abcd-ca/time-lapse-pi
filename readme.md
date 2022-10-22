@@ -89,3 +89,7 @@ https://stackoverflow.com/a/17389526
 
 # GPIO Pinouts
 https://pinout.xyz/
+
+# Added app as a linux service so it runs on boot (starts with button press)
+
+Add a systemd service
