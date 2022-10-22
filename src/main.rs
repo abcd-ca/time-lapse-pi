@@ -6,17 +6,24 @@ use std::error::Error;
 use std::time::Duration;
 use tokio::{task, time}; // 1.3.0
 
-// TODO https://www.raspberrypi.com/documentation/accessories/camera.html#libcamera-jpeg
+// ref: `libcamera-jpeg -h` and https://www.raspberrypi.com/documentation/accessories/camera.html#libcamera-jpeg
 async fn capture_image(n: u32) -> Result<(), Box<dyn Error  + Send + Sync>>  {
     // command exists on legacy versions of raspian only
-    let output = Command::new("raspistill")
+    let output = Command::new("libcamera-jpeg")
         .arg("-o")
-      //println!("{:0width$}", x, width = width);
-        .arg(format!("output/image{:0width$}.jpg", n + 1, width = 4))
+        .arg(format!("output/image{:0pad_width$}.jpg", n + 1, pad_width = 4))
+        .arg("--immediate")
+        .arg("--width")
+        .arg("640")
+        .arg("--height")
+        .arg("480")
+        .arg("--quality")
+        .arg("80")
         .output()?;
-    // let output = Command::new("ls")
-    //     .arg("-l")
-    //     .output()?;
+    // TODO consider not looping to capture stills and instead use native timelapse features then have rust stitch the images together.
+    //  --timelapse
+    //  --timeout
+    //  Could probably also achieve this with a bash script but maybe can tack on more interesting logic if kept within Rust app like post-process with opencv
 
     if !output.status.success() {
         // error_chain::bail!("Command executed with failing error code");
@@ -51,7 +58,6 @@ fn help() {
     println!("usage: time-lapse-pi 25")
 }
 
-//-> Result<(), Box<dyn Error>>
 #[tokio::main]
 async fn main()  {
     let forever = task::spawn(async {
@@ -84,7 +90,7 @@ async fn main()  {
                     if x < total_screenshots - 1 {
                         x += 1;
                         println!("Captured {} of {}", x, total_screenshots);
-                        time::sleep(Duration::from_millis(60 * 1000)).await;
+                        time::sleep(Duration::from_millis(30 * 1000)).await;
                     } else {
                         println!("Finished. {} screenshots captured.", total_screenshots);
                         std::process::exit(1)

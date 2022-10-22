@@ -1,3 +1,46 @@
+# Setup
+
+* Format SD card with Raspberry Pi Imager, Choose the 64 bit lite version
+* `sudo apt update`
+* `sudo apt full-upgrade`
+* to be able to stitch stills into an mp4 on the pi, `sudo apt install ffmpeg`
+
+## Getting the app on the pi
+
+### Easiest way
+
+This way installs a lot of extra stuff and puts the source code on the pi
+
+* install rust using the shell script on the front page of the rust website
+* develop on the mac and in webstorm set up the deploy scripts to sync changes on save to the pi over sftp
+* `cargo run -- 180` (where `--` indicates to cargo to send the next arg to the binary rather than cargo). `180` is the total number of images to capture
+	* to run it for a long time, see "long running process" lower in this document
+
+### Better production way
+
+Cross compile on mac for raspberry pi and only copy the binary to the pi, no Rust dependencies or source code on the pi
+
+**TODO** use the `args` crate to make the args handling more pro.
+**TODO** change input to more ergonomic numbers like total duration and frequency (libcamera-jpeg has `--timelapse` and `--timeout` args)
+
+* `time-lapse-pi 180`
+	* to run it for a long time, see "long running process" lower in this document
+
+#### draft section
+`rustup target add armv7-unknown-linux-gnueabihf`
+
+# Preview image
+
+Before you start a timelapse recording you can preview the image the camera will capture – lighting, angle etc. by streaming:
+
+1. Start stream on pi: `libcamera-vid -t 0 --inline --listen -o tcp://0.0.0.0:8080`
+2. View stream on mac by opening VLC > File > Open Network. URL `tcp/h264://raspberrypi.local:8080`
+3. When you exit in the client, the server will also quit (haven't tried to find a way around this since I only care about a preview for setting up the timelapse
+
+# Connecting to raspberry pi:
+
+`ssh pi@raspberrypi.local` password `raspberry`
+
 # Camera crate
 
 There was a [camera crate](https://github.com/pedrosland/rascam) for the legacy Raspberry Pi OS that kind of worked but I found it easy enough to just call the external `raspistill` command. 
@@ -5,7 +48,9 @@ There was a [camera crate](https://github.com/pedrosland/rascam) for the legacy 
 
 # TODO 
 * update OS and try the newer CLI command
-* have Rust automatically stitch the stills into an mp4 after using `ffmpeg -framerate 24 -i img%03d.png output.mp4`. Consider possibly running Rust in a docker image
+* have Rust automatically stitch the stills into an mp4 after using 
+	* `ffmpeg -framerate 24 -i img%03d.png output.mp4`. Consider possibly running Rust in a docker image
+	* or `ffmpeg -r 10 -pattern_type glob -i "*.jpg" -s 1920x1440 -vcodec libx264 output.mp4` **Tried this version, works well**
 	* Dependency: `sudo apt	 install ffmpeg` (doesn't work in legacy Raspian OS) or could create a [docker](https://www.simplilearn.com/tutorials/docker-tutorial/raspberry-pi-docker#installing_docker_raspberry_pi) image containing ffmpeg and rust
  
 ## linking to libcamera library
