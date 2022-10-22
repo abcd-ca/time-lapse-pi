@@ -1,17 +1,25 @@
-use std::process::Command;
-use std::fs;
 use std::env;
 use std::error::Error;
+use std::fs;
+use std::process::Command;
 // use std::fmt;
 use std::time::Duration;
 use tokio::{task, time}; // 1.3.0
 
+extern crate args;
+
+// TODO args https://crates.io/crates/args
+
 // ref: `libcamera-jpeg -h` and https://www.raspberrypi.com/documentation/accessories/camera.html#libcamera-jpeg
-async fn capture_image(n: u32) -> Result<(), Box<dyn Error  + Send + Sync>>  {
+async fn capture_image(n: u32) -> Result<(), Box<dyn Error + Send + Sync>> {
     // command exists on legacy versions of raspian only
     let output = Command::new("libcamera-jpeg")
         .arg("-o")
-        .arg(format!("output/image{:0pad_width$}.jpg", n + 1, pad_width = 4))
+        .arg(format!(
+            "output/image{:0pad_width$}.jpg",
+            n + 1,
+            pad_width = 4
+        ))
         .arg("--immediate")
         .arg("--width")
         .arg("640")
@@ -24,20 +32,27 @@ async fn capture_image(n: u32) -> Result<(), Box<dyn Error  + Send + Sync>>  {
     //  --timelapse
     //  --timeout
     //  Could probably also achieve this with a bash script but maybe can tack on more interesting logic if kept within Rust app like post-process with opencv
+    // TODO add a delay argument so I can start it at 10pm and it will start recording when I know sunrise is, like at 6am the next day
+    // TODO estimate disk space needed and warn
+    // TODO check disk space between pictures and quit before running out.
+    // TODO enable off-grid configuration and start. Ex. if I take it to the forest, I won't have
+    //  wifi so how do I connect to it and start it? Maybe if it can't get on the LAN after 30
+    //  seconds, it could host its own wifi network that I can connect to with my phone. Maybe its
+    //  own GUI website to do some stuff.
 
     if !output.status.success() {
         // error_chain::bail!("Command executed with failing error code");
         println!("Something went wrong, exiting");
 
         String::from_utf8(output.stderr)?
-        .lines()
-        // .filter_map(|line| pattern.captures(line))
-        // .map(|cap| Commit {
-        //     hash: cap[1].to_string(),
-        //     message: cap[2].trim().to_string(),
-        // })
-        .take(5)
-        .for_each(|x| eprintln!("{:?}", x));
+            .lines()
+            // .filter_map(|line| pattern.captures(line))
+            // .map(|cap| Commit {
+            //     hash: cap[1].to_string(),
+            //     message: cap[2].trim().to_string(),
+            // })
+            .take(5)
+            .for_each(|x| eprintln!("{:?}", x));
 
         std::process::exit(1)
     }
@@ -59,7 +74,7 @@ fn help() {
 }
 
 #[tokio::main]
-async fn main()  {
+async fn main() {
     let forever = task::spawn(async {
         let mut x: u32 = 0;
 
