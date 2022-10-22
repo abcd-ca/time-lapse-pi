@@ -19,16 +19,19 @@ This way installs a lot of extra stuff and puts the source code on the pi
 ### Better production way
 
 Cross compile on mac for raspberry pi and only copy the binary to the pi, no Rust dependencies or source code on the pi
-
-**TODO** use the `args` crate to make the args handling more pro.
-**TODO** change input to more ergonomic numbers like total duration and frequency (libcamera-jpeg has `--timelapse` and `--timeout` args)
-
-* `time-lapse-pi 180`
+* `cargo install cross` (depends on docker)
+* see `deployRelease.sh`
+* Copy the binary to the pi using rsync (`deployRelease.sh` also does this)
+* run the binary on the pi using, `time-lapse-pi 180`
 	* to run it for a long time, see "long running process" lower in this document
 
 #### draft section
-`rustup target add armv7-unknown-linux-gnueabihf`
 
+These are just notes for tests, they may not work
+
+* setup step `rustup target add armv7-unknown-linux-gnueabihf`
+* build for pi: `cargo build --target aarch64-arm-none-eabi`
+ 
 # Preview image
 
 Before you start a timelapse recording you can preview the image the camera will capture – lighting, angle etc. by streaming:
@@ -83,3 +86,6 @@ In order to prevent the long running process from disconnecting from the ssh ses
 ## How to cancel the timelapse background job
 
 https://stackoverflow.com/a/17389526
+
+# GPIO Pinouts
+https://pinout.xyz/

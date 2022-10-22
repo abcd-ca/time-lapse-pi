@@ -4,6 +4,7 @@ use std::fs;
 use std::process::Command;
 // use std::fmt;
 use std::time::Duration;
+use time_lapse_pi::gpio::{button, led};
 use tokio::{task, time}; // 1.3.0
 
 extern crate args;
@@ -12,7 +13,7 @@ extern crate args;
 
 // ref: `libcamera-jpeg -h` and https://www.raspberrypi.com/documentation/accessories/camera.html#libcamera-jpeg
 async fn capture_image(n: u32) -> Result<(), Box<dyn Error + Send + Sync>> {
-    // command exists on legacy versions of raspian only
+    // taking stills in a rust loop instead of using the built-in libcamera timelapse so that we can provide GPIO feedback and do disk storage checks
     let output = Command::new("libcamera-jpeg")
         .arg("-o")
         .arg(format!(
@@ -22,23 +23,15 @@ async fn capture_image(n: u32) -> Result<(), Box<dyn Error + Send + Sync>> {
         ))
         .arg("--immediate")
         .arg("--width")
-        .arg("640")
+        .arg("1280")
         .arg("--height")
-        .arg("480")
+        .arg("720")
         .arg("--quality")
-        .arg("80")
+        .arg("85")
         .output()?;
-    // TODO consider not looping to capture stills and instead use native timelapse features then have rust stitch the images together.
-    //  --timelapse
-    //  --timeout
-    //  Could probably also achieve this with a bash script but maybe can tack on more interesting logic if kept within Rust app like post-process with opencv
     // TODO add a delay argument so I can start it at 10pm and it will start recording when I know sunrise is, like at 6am the next day
     // TODO estimate disk space needed and warn
     // TODO check disk space between pictures and quit before running out.
-    // TODO enable off-grid configuration and start. Ex. if I take it to the forest, I won't have
-    //  wifi so how do I connect to it and start it? Maybe if it can't get on the LAN after 30
-    //  seconds, it could host its own wifi network that I can connect to with my phone. Maybe its
-    //  own GUI website to do some stuff.
 
     if !output.status.success() {
         // error_chain::bail!("Command executed with failing error code");
@@ -66,6 +59,7 @@ async fn capture_image(n: u32) -> Result<(), Box<dyn Error + Send + Sync>> {
         // })
         .take(5)
         .for_each(|x| println!("{:?}", x));
+
     Ok(())
 }
 
@@ -75,6 +69,8 @@ fn help() {
 
 #[tokio::main]
 async fn main() {
+    button::wait_for_press("Press the button to start the time-lapse");
+
     let forever = task::spawn(async {
         let mut x: u32 = 0;
 
@@ -100,6 +96,7 @@ async fn main() {
         fs::create_dir_all("./output").expect("Should create the output directory");
 
         loop {
+            led::blink();
             match capture_image(x).await {
                 Ok(()) => {
                     if x < total_screenshots - 1 {
@@ -108,6 +105,10 @@ async fn main() {
                         time::sleep(Duration::from_millis(30 * 1000)).await;
                     } else {
                         println!("Finished. {} screenshots captured.", total_screenshots);
+                        // turn LED on so that I can tell when the timelapse is on
+                        led::on();
+                        button::wait_for_press("Press the button to turn off the LED and exit");
+                        led::off();
                         std::process::exit(1)
                     }
                 }
