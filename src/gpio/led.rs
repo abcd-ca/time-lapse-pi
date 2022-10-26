@@ -1,7 +1,6 @@
 extern crate rust_gpiozero;
+use crate::GPIO_LED;
 use rust_gpiozero::LED;
-
-const GPIO_LED: u8 = 17;
 
 pub fn blink() {
     // Create a new LED attached to Pin GPIO_LED

@@ -1,7 +1,5 @@
 use std::env;
-use std::error::Error;
 use std::fs;
-use std::process::Command;
 use std::time::Duration;
 use time_lapse_pi::camera;
 use time_lapse_pi::gpio::{button, led};

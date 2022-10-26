@@ -1,7 +1,6 @@
 extern crate rust_gpiozero;
+use crate::GPIO_BUTTON;
 use rust_gpiozero::Button;
-
-const GPIO_BUTTON: u8 = 27;
 
 pub fn wait_for_press(prompt: &str) {
     println!("{}", prompt);
