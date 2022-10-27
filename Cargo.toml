@@ -10,5 +10,5 @@ args = "2.2.0"
 rust_gpiozero = "0.2.1"
 tokio = { version = "1", features = ["full"] }
 
-[profile.release]
-strip = true  # Automatically strip symbols from the binary to make file size smaller.
+#[profile.release]
+#strip = true  # Automatically strip symbols from the binary to make file size smaller.

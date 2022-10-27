@@ -1,12 +1,23 @@
 extern crate rust_gpiozero;
-use crate::GPIO_BUTTON;
 use rust_gpiozero::Button;
 
-pub fn wait_for_press(prompt: &str) {
-    println!("{}", prompt);
-    // Create a new Button attached to Pin GPIO_BUTTON
-    let mut button = Button::new(GPIO_BUTTON);
+pub struct ButtonPeripheral {
+    button: Button,
+}
 
-    //Wait for a Button Press
-    button.wait_for_press(None);
+impl ButtonPeripheral {
+    /// pin GPIO pin
+    pub fn new(pin: u8) -> Self {
+        // Create a new Button attached to GPIO pin
+        Self {
+            button: Button::new(pin),
+        }
+    }
+
+    pub fn wait_for_press(&mut self, prompt: &str) {
+        println!("{}", prompt);
+
+        //Wait for a Button Press
+        self.button.wait_for_press(None);
+    }
 }

@@ -2,7 +2,7 @@ use std::env;
 use std::fs;
 use std::time::Duration;
 use time_lapse_pi::camera;
-use time_lapse_pi::gpio::{button, led};
+use time_lapse_pi::gpio;
 use tokio::{task, time}; // 1.3.0
 
 extern crate args;
@@ -12,8 +12,6 @@ fn help() {
 
 #[tokio::main]
 async fn main() {
-    button::wait_for_press("Press the button to start the time-lapse");
-
     let forever = task::spawn(async {
         let mut x: u32 = 0;
 
@@ -34,12 +32,18 @@ async fn main() {
             }
         };
 
+        let (mut light, mut button) = gpio::get_peripherals();
+        light.on();
+        button.wait_for_press("Press the button to start the time-lapse");
+        light.off();
+
         println!("Will create {} screenshots...", total_screenshots);
 
         fs::create_dir_all("./output").expect("Should create the output directory");
 
         loop {
-            led::blink();
+            // blink before each capture so you can tell the time-lapse is still recording
+            light.blink();
             match camera::capture_image(x).await {
                 Ok(()) => {
                     if x < total_screenshots - 1 {
@@ -49,10 +53,10 @@ async fn main() {
                     } else {
                         println!("Finished. {} screenshots captured.", total_screenshots);
                         // turn LED on so that I can tell when the timelapse is on
-                        led::on();
-                        button::wait_for_press("Press the button to turn off the LED and exit");
-                        led::off();
-                        std::process::exit(1)
+                        light.on();
+                        button.wait_for_press("Press the button to turn off the LED and exit");
+                        light.off();
+                        std::process::exit(0)
                     }
                 }
                 Err(_) => {
