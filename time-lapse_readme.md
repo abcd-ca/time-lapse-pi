@@ -53,7 +53,7 @@ There was a [camera crate](https://github.com/pedrosland/rascam) for the legacy 
 * update OS and try the newer CLI command
 * have Rust automatically stitch the stills into an mp4 after using 
 	* `ffmpeg -framerate 24 -i img%03d.png output.mp4`. Consider possibly running Rust in a docker image
-	* or `ffmpeg -r 10 -pattern_type glob -i "*.jpg" -s 1920x1440 -vcodec libx264 output.mp4` **Tried this version, works well**
+	* or `ffmpeg -r 10 -pattern_type glob -i "*.jpg" -s 1080x720 -vcodec libx264 output.mp4` **Tried this version, works well**
 	* Dependency: `sudo apt	 install ffmpeg` (doesn't work in legacy Raspian OS) or could create a [docker](https://www.simplilearn.com/tutorials/docker-tutorial/raspberry-pi-docker#installing_docker_raspberry_pi) image containing ffmpeg and rust
  
 ## linking to libcamera library

@@ -5,6 +5,16 @@ use time_lapse_pi::camera;
 use time_lapse_pi::gpio;
 use tokio::{task, time}; // 1.3.0
 
+// TODO reduce power by killing the bluetooth and wifi radios during program execution.
+//  Could re-enable them before program exits after button press. Only kill during active capturing
+//  https://pimylifeup.com/raspberry-pi-disable-wifi/
+//  commands are simply:
+//      rfkill block wifi
+//      rfkill block bluetooth
+//      rfkill unblock wifi
+//      rfkill unblock bluetooth
+//  These commands do persist after reboot
+
 extern crate args;
 fn help() {
     println!("usage: time-lapse-pi 25")
