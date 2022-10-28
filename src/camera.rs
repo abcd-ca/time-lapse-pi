@@ -18,6 +18,8 @@ pub async fn capture_image(n: u32) -> Result<(), Box<dyn Error + Send + Sync>> {
         .arg("720")
         .arg("--quality")
         .arg("85")
+        // flip because in its enclosure it's upside down
+        .arg("--vflip")
         .output()?;
     // TODO add a delay argument so I can start it at 10pm and it will start recording when I know sunrise is, like at 6am the next day
     // TODO estimate disk space needed and warn

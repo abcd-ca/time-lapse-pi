@@ -24,6 +24,7 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         .arg("0")
         .arg("--inline")
         .arg("--listen")
+        .arg("--vflip")
         .arg("-o")
         .arg(format!("tcp://0.0.0.0:{}", preview_url.port))
         .output()?;
