@@ -2,7 +2,7 @@ use std::error::Error;
 use std::process::Command;
 
 // ref: `libcamera-jpeg -h` and https://www.raspberrypi.com/documentation/accessories/camera.html#libcamera-jpeg
-pub async fn capture_image(n: u32) -> Result<(), Box<dyn Error + Send + Sync>> {
+pub fn capture_image(n: u32) -> Result<(), Box<dyn Error + Send + Sync>> {
     // taking stills in a rust loop instead of using the built-in libcamera timelapse so that we can provide GPIO feedback and do disk storage checks
     let output = Command::new("libcamera-jpeg")
         .arg("-o")
