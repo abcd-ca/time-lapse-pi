@@ -1,9 +1,5 @@
-use std::env;
-use std::fs;
-use std::time::Duration;
+use time_lapse_pi::args::{Preset, TimeLapseConfig};
 use time_lapse_pi::camera;
-use time_lapse_pi::gpio;
-use tokio::time; // 1.3.0
 
 // TODO reduce power by killing the bluetooth and wifi radios during program execution.
 //  Could re-enable them before program exits after button press. Only kill during active capturing
@@ -14,64 +10,28 @@ use tokio::time; // 1.3.0
 //      rfkill unblock wifi
 //      rfkill unblock bluetooth
 //  These commands do persist after reboot
-
-extern crate args;
-fn help() {
-    println!("usage: time-lapse-pi 25")
-}
+// TODO docs
 
 #[tokio::main]
 async fn main() {
-    let mut x: u32 = 0;
-
-    let args: Vec<String> = env::args().collect();
-    if args.len() != 2 {
-        help();
-        std::process::exit(1)
-    }
-    let num = &args[1];
-
-    // parse the number
-    let total_screenshots: u32 = match num.parse() {
-        Ok(n) => n,
-        Err(_) => {
-            eprintln!("error: second argument not an integer");
-            help();
-            std::process::exit(1)
-        }
+    // TODO get this from args via clap crate
+    let config = TimeLapseConfig {
+        trails: false,
+        preset: Preset::Sky,
+        capture_duration: "1m".to_string(),
+        delay_start_duration: "1m".to_string(),
     };
 
-    let (mut light, mut button) = gpio::get_peripherals();
-    light.on();
-    button.wait_for_press("Press the button to start the time-lapse");
-    light.off();
-
-    println!("Will create {} screenshots...", total_screenshots);
-
-    fs::create_dir_all("./output").expect("Should create the output directory");
-
-    loop {
-        // blink before each capture so you can tell the time-lapse is still recording
-        light.blink();
-        match camera::capture_image(x) {
-            Ok(()) => {
-                if x < total_screenshots - 1 {
-                    x += 1;
-                    println!("Captured {} of {}", x, total_screenshots);
-                    time::sleep(Duration::from_millis(30 * 1000)).await;
-                } else {
-                    println!("Finished. {} screenshots captured.", total_screenshots);
-                    // turn LED on so that I can tell when the timelapse is on
-                    light.on();
-                    button.wait_for_press("Press the button to turn off the LED and exit");
-                    light.off();
-                    std::process::exit(0)
-                }
-            }
-            Err(_) => {
-                eprintln!("Encountered error, exiting");
-                std::process::exit(1)
-            }
+    // TODO maybe if I do this in a thread then I can bring the LED and button logic outside of the
+    //  camera module.
+    //  The blinking before each image capture could maybe be done by having this child thread
+    //  report back to the main thread so the main thread could do the periodic blink. Not sure if
+    //  threads can do that
+    match camera::start_time_lapse(&config).await {
+        Ok(()) => std::process::exit(0),
+        Err(err) => {
+            eprintln!("{}", err);
+            std::process::exit(1);
         }
     }
 }
