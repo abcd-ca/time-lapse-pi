@@ -10,6 +10,13 @@ fn parse_duration_to_ms_3h() {
 }
 
 #[test]
+fn parse_duration_to_ms_10h() {
+    let expected: u64 = 10 * 60 * 60 * 1000;
+    let actual = time_lapse_pi::number_util::parse_duration_to_ms("10h").unwrap();
+    assert_eq!(actual, expected)
+}
+
+#[test]
 #[should_panic]
 fn parse_duration_to_ms_invalid_units() {
     let actual = time_lapse_pi::number_util::parse_duration_to_ms("3m").unwrap();

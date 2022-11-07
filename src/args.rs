@@ -17,6 +17,9 @@ pub enum SubCommandType {
     /// Store and review settings for time-lapse
     Config(ConfigCommand),
 
+    /// Start a video stream so that you can see what the camera sees. You can view it by using VLC on the local network
+    Preview,
+
     /// Start the time-lapse app – it will wait for a (GPIO) button press to begin capturing photos
     Start,
 

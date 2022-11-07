@@ -8,7 +8,7 @@ use std::time::Duration;
 use tokio::time;
 
 // ref: `libcamera-jpeg -h` and https://www.raspberrypi.com/documentation/accessories/camera.html#libcamera-jpeg
-fn capture_image(n: u64) -> Result<(), Box<dyn Error + Send + Sync>> {
+fn capture_image(n: u64) -> Result<(), Box<dyn Error>> {
     // taking stills in a rust loop instead of using the built-in libcamera timelapse so that we can provide GPIO feedback and do disk storage checks
     let output = Command::new("libcamera-jpeg")
         .arg("-o")
@@ -122,3 +122,51 @@ pub async fn start_time_lapse(config: &TimeLapseConfig) -> TimeLapseResult {
 //     unimplemented!("return the aperature exposure based on the --preset and --trails options")
 // }
 //
+
+pub fn preview(host: &str, port: &str) -> Result<(), Box<dyn Error>> {
+    println!(
+        "Open VLC and File > Open Network. Use this URL: tcp/h264://{}:{}",
+        host, port
+    );
+
+    // command exists on legacy versions of raspian only
+    let output = Command::new("libcamera-vid")
+        .arg("--nopreview")
+        .arg("-t")
+        .arg("0")
+        .arg("--inline")
+        .arg("--listen")
+        .arg("--vflip")
+        .arg("--nopreview")
+        .arg("-o")
+        .arg(format!("tcp://0.0.0.0:{}", port))
+        .output()?;
+
+    if !output.status.success() {
+        println!("Something went wrong, exiting");
+
+        String::from_utf8(output.stderr)?
+            .lines()
+            // .filter_map(|line| pattern.captures(line))
+            // .map(|cap| Commit {
+            //     hash: cap[1].to_string(),
+            //     message: cap[2].trim().to_string(),
+            // })
+            // .take(5)
+            .for_each(|x| eprintln!("{:?}", x));
+
+        std::process::exit(1)
+    }
+
+    String::from_utf8(output.stdout)?
+        .lines()
+        // .filter_map(|line| pattern.captures(line))
+        // .map(|cap| Commit {
+        //     hash: cap[1].to_string(),
+        //     message: cap[2].trim().to_string(),
+        // })
+        .take(5)
+        .for_each(|x| println!("{:?}", x));
+
+    Ok(())
+}

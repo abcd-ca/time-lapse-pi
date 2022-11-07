@@ -1,7 +1,7 @@
 use clap::Parser;
 use time_lapse_pi::args::Cli;
 use time_lapse_pi::args::ConfigSubCommand::{Create, Show};
-use time_lapse_pi::args::SubCommandType::{Config, Start, Stitch};
+use time_lapse_pi::args::SubCommandType::{Config, Preview, Start, Stitch};
 use time_lapse_pi::{camera, config};
 
 // TODO reduce power by killing the bluetooth and wifi radios during program execution.
@@ -30,12 +30,18 @@ async fn main() {
                     config::create(config);
                 }
                 Show => {
-                    if let Err(e) = config::show() {
-                        println!("{}", e);
+                    if let Err(err) = config::show() {
+                        println!("{}", err);
                         std::process::exit(0);
                     }
                 }
             };
+        }
+        Preview => {
+            if let Err(err) = camera::preview("raspberrypi.local", "8080") {
+                eprintln!("{}", err);
+                std::process::exit(1);
+            }
         }
         Start => {
             match config::load() {
