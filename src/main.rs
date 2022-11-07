@@ -1,5 +1,8 @@
-use time_lapse_pi::args::{Preset, TimeLapseConfig};
-use time_lapse_pi::camera;
+use clap::Parser;
+use time_lapse_pi::args::Cli;
+use time_lapse_pi::args::ConfigSubCommand::{Create, Show};
+use time_lapse_pi::args::SubCommandType::{Config, Start, Stitch};
+use time_lapse_pi::{camera, config};
 
 // TODO reduce power by killing the bluetooth and wifi radios during program execution.
 //  Could re-enable them before program exits after button press. Only kill during active capturing
@@ -12,25 +15,52 @@ use time_lapse_pi::camera;
 //  These commands do persist after reboot
 // TODO docs
 
+// TODO consider using this crate to show the recording duration https://crates.io/crates/compound_duration
+
+// TODO when creating the config file warn if there's insufficient disk space. need to extrapolate based on about 3mb per image and compare current free disk space
+
 #[tokio::main]
 async fn main() {
-    // TODO get this from args via clap crate
-    let config = TimeLapseConfig {
-        trails: false,
-        preset: Preset::Sky,
-        capture_duration: "1m".to_string(),
-        delay_start_duration: "1m".to_string(),
-    };
+    let cli_args = Cli::parse();
 
-    // TODO maybe if I do this in a thread then I can bring the LED and button logic outside of the
-    //  camera module.
-    //  The blinking before each image capture could maybe be done by having this child thread
-    //  report back to the main thread so the main thread could do the periodic blink. Not sure if
-    //  threads can do that
-    match camera::start_time_lapse(&config).await {
-        Ok(()) => std::process::exit(0),
-        Err(err) => {
-            eprintln!("{}", err);
+    match cli_args.subcommand {
+        Config(config_command) => {
+            match config_command.command {
+                Create(config) => {
+                    config::create(config);
+                }
+                Show => {
+                    if let Err(e) = config::show() {
+                        println!("{}", e);
+                        std::process::exit(0);
+                    }
+                }
+            };
+        }
+        Start => {
+            match config::load() {
+                Some(config) => {
+                    // TODO maybe if I do this in a thread then I can bring the LED and button logic outside of the
+                    //  camera module.
+                    //  The blinking before each image capture could maybe be done by having this child thread
+                    //  report back to the main thread so the main thread could do the periodic blink. Not sure if
+                    //  threads can do that
+                    match camera::start_time_lapse(&config).await {
+                        Ok(()) => std::process::exit(0),
+                        Err(err) => {
+                            eprintln!("{}", err);
+                            std::process::exit(1);
+                        }
+                    }
+                }
+                None => {
+                    eprintln!("Couldn't load config file, use the create subcommand to create one");
+                    std::process::exit(1);
+                }
+            };
+        }
+        Stitch => {
+            println!("Stitching is not yet implemented");
             std::process::exit(1);
         }
     }

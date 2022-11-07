@@ -1,4 +1,5 @@
 use time_lapse_pi::args::{Preset, TimeLapseConfig};
+use time_lapse_pi::config::validate_config;
 
 // TODO make another test to parse 1h, 1w, 2d
 #[test]
@@ -17,9 +18,15 @@ fn parse_duration_to_ms_invalid_units() {
 
 #[test]
 #[should_panic]
-fn parse_duration_to_ms_duration_too_low() {
-    let actual = time_lapse_pi::number_util::parse_duration_to_ms("0h").unwrap();
-    assert_eq!(actual, 0)
+fn validate_config_duration_too_low() {
+    let config = TimeLapseConfig {
+        capture_duration: "0h".to_string(),
+        delay_start_duration: "0h".to_string(),
+        preset: Preset::Sky,
+        trails: false,
+    };
+    let actual = validate_config(&config).unwrap();
+    assert_eq!(actual, ())
 }
 
 fn get_total_images(config: &TimeLapseConfig, expected: u64) {

@@ -16,8 +16,12 @@ pub struct Cli {
 pub enum SubCommandType {
     /// Store and review settings for time-lapse
     Config(ConfigCommand),
-    // Start the time-lapse app – it will wait for a (GPIO) button press to begin capturing photos
-    // capture(CaptureCommand),
+
+    /// Start the time-lapse app – it will wait for a (GPIO) button press to begin capturing photos
+    Start,
+
+    /// Stitch the captured stills into a mp4 video
+    Stitch,
 }
 
 #[derive(Debug, Args)]
