@@ -66,6 +66,10 @@ Since the pi is running the time-lapse app as root and not through a terminal, i
 
 5. If still on the network, you can view a log of the time-lapse by running `tail -f /home/pi/rust/time-lapse-pi-rust/time-lapse.log` in the project root folder
 
+# Pi Enclosure
+
+I 3D printed [this enclosure](https://www.thingiverse.com/thing:685074). I like it because it's got a built-in camera holder that you can articulate. The ball joint needed to be printed at 90% scale and I found I needed to use a bit of glue to keep the two halves of the camera enclosure together and the back of the pi case.  
+
 # Other reference
 
 ## Raspberry pi GPIO Pinouts
